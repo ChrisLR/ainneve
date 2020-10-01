@@ -654,7 +654,7 @@ class Trait(object):
     @property
     def extra(self):
         """Returns a list containing available extra data keys."""
-        return self._data['extra'].keys()
+        return list(self._data['extra'].keys())
 
     def reset_mod(self):
         """Clears any mod value on the `Trait`."""
