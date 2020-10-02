@@ -291,8 +291,11 @@ class TraitHandler(object):
         return self.cache[trait]
 
     def add(self, key, name, type='static',
-            base=0, mod=0, min=None, max=None, extra={}):
+            base=0, mod=0, min=None, max=None, extra=None):
         """Create a new Trait and add it to the handler."""
+        if extra is None:
+            extra = {}
+
         if key in self.attr_dict:
             raise TraitException("Trait '{}' already exists.".format(key))
 
@@ -322,13 +325,18 @@ class TraitHandler(object):
 
     def clear(self):
         """Remove all Traits from the handler's parent object."""
-        for trait in list(self.all):
+        for trait in self.all:
             self.remove(trait)
 
     @property
     def all(self):
-        """Return a list of all trait keys in this TraitHandler."""
-        return self.attr_dict.keys()
+        """
+        Return a list of all trait keys in this TraitHandler.
+
+        Since keys are not guaranteed to always be in the same order
+        they are sorted before being returned to prevent inconsistencies.
+        """
+        return sorted(self.attr_dict.keys())
 
 
 @total_ordering
