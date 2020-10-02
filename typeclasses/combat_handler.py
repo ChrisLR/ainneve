@@ -1,11 +1,13 @@
 
-from collections import deque, OrderedDict
-from operator import add
 import random
-from .scripts import Script
+from collections import deque, OrderedDict
+from functools import reduce
+from operator import add
+
 from evennia import TICKER_HANDLER as tickerhandler
 from evennia.utils import utils, make_iter
 
+from .scripts import Script
 
 COMBAT_DISTANCES = ['melee', 'reach', 'ranged']
 WRESTLING_POSITIONS = ('STANDING', 'CLINCHED', 'TAKE DOWN', 'PINNED')
@@ -166,7 +168,8 @@ class CombatHandler(Script):
 
         kwargs.update(dict(actor=actor, target=target))
 
-        for character in self.db.characters.values():
+        characters = list(self.db.characters.values())
+        for character in characters:
             if character == actor:
                 cbt_prefix = '|b->|n '
             elif character == target:
@@ -185,10 +188,13 @@ class CombatHandler(Script):
                     prompt=_COMBAT_PROMPT.format(tr=character.traits))
 
         # send messaging to others in the same room but not in combat
+        exclude_list = []
+        exclude_list.extend(exclude)
+        exclude_list.extend(characters)
         actor.location.msg_contents(
             text=message,
             mapping=kwargs,
-            exclude=exclude + self.db.characters.values()
+            exclude=exclude_list
         )
 
     def add_action(self, action, character, target, duration, longturn=False):
