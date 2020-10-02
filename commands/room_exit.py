@@ -61,7 +61,7 @@ class CmdTerrain(MuxCommand):
             try:
                 target.terrain = terrain
             except ValueError as e:
-                self.caller.msg(e.message)
+                self.caller.msg(str(e))
             else:
                 self.caller.msg("Terrain type '{}' set on {}.".format(terrain,
                                                                   target.key))
