@@ -139,8 +139,9 @@ class EquipHandler(object):
         """Iterate over the equip in an ordered way."""
         if not self.obj.db.slots:
             return
+
         for slot in self.slot_order:
-                yield slot, self.get(slot)
+            yield slot, self.get(slot)
 
     def __contains__(self, item):
         """Implement the __contains__ method."""
@@ -164,17 +165,26 @@ class EquipHandler(object):
         Args:
             obj (Equippable): the item to be equipped
         """
-        free_slots = [sl for sl in obj.db.slots if sl in self.empty_slots]
+        slots = obj.db.slots
+        if not slots:
+            return False
+        
+        if not self.empty_slots:
+            return False
+
+        free_slots = [sl for sl in slots if sl in self.empty_slots]
         if not free_slots:
             return False
+
         if obj.db.multi_slot:
-            if len(free_slots) != len(obj.db.slots):
+            if len(free_slots) != len(slots):
                 return False
             for slot in free_slots:
                 self._set(slot, obj)
         else:
             slot = free_slots[0]
             self._set(slot, obj)
+
         return True
 
     def remove(self, obj):
