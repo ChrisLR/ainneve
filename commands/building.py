@@ -1,16 +1,15 @@
 """
 Building commands
 """
-
-from .command import MuxCommand
-from evennia import utils, CmdSet
+from evennia import CmdSet
+from evennia.commands.default.building import CmdSpawn as DefaultCmdSpawn
 from evennia.utils.evtable import EvTable
 from evennia.utils.utils import inherits_from
-from evennia.commands.default.building import CmdSpawn as DefaultCmdSpawn
-from evennia.commands.default.building import _convert_from_string
+
+from typeclasses.npcshop.npcshop import CmdBuildShop
 from world.archetypes import ALL_TRAITS
 from world.skills import ALL_SKILLS
-from typeclasses.npcshop.npcshop import CmdBuildShop
+from .command import MuxCommand
 
 
 class AinneveBuildingCmdSet(CmdSet):
@@ -152,6 +151,7 @@ class CmdSetTraits(MuxCommand):
             caller.msg("Could not find NPC: '{}'".format(target))
             return
 
+        char_traits = char.traits.all
         if self.rhs:
             if not all((x.isdigit() for x in self.rhslist)):
                 caller.msg('Assignment values must be numeric.')
@@ -160,7 +160,7 @@ class CmdSetTraits(MuxCommand):
                 caller.msg('Incorrect number of assignment values.')
                 return
             for i in list(range(len(self.lhslist))):
-                if self.lhslist[i].upper() in char.traits.all:
+                if self.lhslist[i].upper() in char_traits:
                     char.traits[self.lhslist[i].upper()].base = \
                         min(max(int(self.rhslist[i]), 0), 10)
                     caller.msg('Trait "{}" set to {} for {}'.format(
@@ -173,20 +173,30 @@ class CmdSetTraits(MuxCommand):
         # display traits
         data = []
         if any(self.lhslist):
-            traits = [t.upper() for t in self.lhslist
-                      if t.upper() in char.traits.all]
+            traits = sorted(
+                t.upper() for t in self.lhslist
+                if t.upper() in char_traits
+            )
         else:
-            traits = char.traits.all
+            traits = char_traits
 
-        if len(traits) == 0:
+        if not char_traits:
             return
-        elif 0 < len(traits) < 3:
-            [data.append([self._format_trait_3col(char.traits[t])])
-             for t in traits]
+
+        # Not the most efficient code but easy to understand
+        row = []
+        while traits:
+            trait = traits.pop()
+            char_trait = char.traits[trait]
+            formatted_trait = self._format_trait_3col(char_trait)
+            row.append(formatted_trait)
+            if len(row) >= 3:
+                data.append(row)
+                row = []
         else:
-            [data.append([self._format_trait_3col(char.traits[t])
-                          for t in traits[i::3]])
-             for i in list(range(3))]
+            if row:
+                data.append(row)
+
         table = EvTable(header=False, table=data)
         caller.msg(table)
 
