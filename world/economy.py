@@ -27,14 +27,16 @@ def value_to_coin(value):
     """Given a base value in CC, return smallest number of coins."""
     if value:
         if isinstance(value, int):
-            gc = value / GC
-            value %= GC
-            sc = value / SC
-            cc = value % SC
+            gc = value // GC
+            value -= gc * GC
+            sc = value // SC
+            value -= sc * SC
+            cc = value
             return dict(CC=cc, SC=sc, GC=gc)
         elif isinstance(value, (dict, _SaverDict)):
             return {c: v for c, v in value.items() if c in _WALLET_KEYS}
     return None
+
 
 def coin_to_value(coins):
     """Given a dict of coin: value pairs, return the total value in CC.
@@ -80,11 +82,11 @@ def format_coin(value_or_coin):
     coins = value_to_coin(value_or_coin) or {'GC': 0, 'SC': 0, 'CC': 0}
     gc, sc, cc = coins.get('GC', 0), coins.get('SC', 0), coins.get('CC', 0)
     output = ""
-    if gc:
+    if gc >= 1:
         output += "|w{}|n GC ".format(gc)
-    if sc:
+    if sc >= 1:
         output += "|w{}|n SC ".format(sc)
-    if cc:
+    if cc >= 1:
         output += "|w{}|n CC".format(cc)
     if output == "":
         output = "0 CC"
